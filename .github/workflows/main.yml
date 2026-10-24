@@ -4,9 +4,12 @@ on:
   release:
     types: [published]
 
+# リリースへの書き込み権限（必須）
+permissions:
+  contents: write
+
 jobs:
   build:
-    # Windows Forms / net9.0-windows のため windows-latest を指定
     runs-on: windows-latest
 
     steps:
@@ -23,10 +26,6 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      # テストプロジェクトがある場合は有効化してください（現在は無いためコメントアウトまたは省略可能）
-      # - name: Test
-      #   run: dotnet test --no-build --verbosity normal
-
       - name: Publish Win-x64 Executable
         run: >
           dotnet publish TaskManagerTrayWidget/TaskManagerTrayWidget.csproj
@@ -36,8 +35,13 @@ jobs:
           -p:PublishSingleFile=true
           -o ./publish
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TaskManagerTrayWidget-win-x64
-          path: ./publish/
+      # 配布用に ZIP アーカイブを作成
+      - name: Create ZIP archive
+        run: Compress-Archive -Path ./publish/* -DestinationPath ./TaskManagerTrayWidget-win-x64.zip
+
+      # GitHub Releases の Assets に exe と zip を添付
+      - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} ./TaskManagerTrayWidget-win-x64.zip ./publish/TaskManagerTrayWidget.exe --clobber
