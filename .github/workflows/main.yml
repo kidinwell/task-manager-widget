@@ -1,10 +1,8 @@
 name: .NET Build and Publish
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -12,34 +10,34 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Build
-      run: dotnet build --no-restore
+      - name: Build
+        run: dotnet build --no-restore
 
-    # テストプロジェクトがある場合は有効化してください（現在は無いためコメントアウトまたは省略可能）
-    # - name: Test
-    #   run: dotnet test --no-build --verbosity normal
+      # テストプロジェクトがある場合は有効化してください（現在は無いためコメントアウトまたは省略可能）
+      # - name: Test
+      #   run: dotnet test --no-build --verbosity normal
 
-    - name: Publish Win-x64 Executable
-      run: >
-        dotnet publish TaskManagerTrayWidget/TaskManagerTrayWidget.csproj
-        -c Release
-        -r win-x64
-        --no-self-contained
-        -p:PublishSingleFile=true
-        -o ./publish
+      - name: Publish Win-x64 Executable
+        run: >
+          dotnet publish TaskManagerTrayWidget/TaskManagerTrayWidget.csproj
+          -c Release
+          -r win-x64
+          --no-self-contained
+          -p:PublishSingleFile=true
+          -o ./publish
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: TaskManagerTrayWidget-win-x64
-        path: ./publish/
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TaskManagerTrayWidget-win-x64
+          path: ./publish/
